@@ -8,6 +8,8 @@ on:
 jobs:
   collect:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
       - name: Checkout repository
@@ -24,10 +26,17 @@ jobs:
       - name: Run news collector
         run: python news_collector.py
       
+      - name: Check if files exist
+        run: ls -la data/ || echo "Папка data пуста или отсутствует"
+      
       - name: Commit and push
         run: |
           git config user.name "News Bot"
           git config user.email "bot@github.com"
           git add data/
-          git commit -m "News update $(date +'%Y-%m-%d')" || exit 0
-          git push
+          if git diff --staged --quiet; then
+            echo "Нет изменений для коммита"
+          else
+            git commit -m "News update $(date +'%Y-%m-%d %H:%M')"
+            git push
+          fi
